@@ -4,7 +4,7 @@
 #include "matrix.h"
 #include "mpi_matrix.h"
 
-int main()
+int main( int argc, char **argv )
 {
 	size_t MATRIX_SIZE = 8;
 	int** A = alloc_matrix(MATRIX_SIZE);
