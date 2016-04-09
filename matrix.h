@@ -5,66 +5,103 @@
 #include <random>
 #include <algorithm>
 
-void print_matrix(int** matrix, const size_t size) 
+#define OFFSET(idx, N) ((idx)*(N))
+#define IDX(i,j, N) ((i)*(N)+(j))
+
+void print_matrix(int* matrix, const size_t N, const size_t gridDim) 
 {
+	if(!matrix) { return; }
+
+	const size_t blockDim = N / gridDim;
 	printf("\n Printing the result \n");
-	for(size_t i=0; i < size; ++i)
+	for(size_t i=0; i < N; ++i)
 	{
-		for(size_t j=0; j < size; ++j)
+		for(size_t j=0; j < N; ++j)
 		{
-			printf("%d\t", matrix[i][j]);
+			int gX = i / blockDim;
+			int gY = j / blockDim;
+			int idx = i % blockDim;
+			int jdx = j % blockDim;
+			printf("%d\t", matrix[OFFSET(IDX(gX, gY, gridDim), blockDim*blockDim) + IDX(idx, jdx, blockDim)]);
 		}
 		printf("\n");
 	}
 	printf("\n End of printing the result \n");
 }
 
-int** alloc_matrix(size_t N)
+int* zero_matrix(size_t N)
 {
-	int** matrix= (int **) malloc(sizeof(int*) * N);
-	for(int i = 0; i < N; ++i)
-	{
-		matrix[i] = (int*) malloc(sizeof(int) * N);
-	}
-	return matrix;
+	return new int[N*N] {};
 }
 
-int** random_matrix(int** matrix, size_t N)
+int* count_matrix(const size_t N, const size_t gridDim)
 {
-	const int RND = 100;
-  	std::default_random_engine generator(time(NULL));
-  	std::uniform_int_distribution<int> distribution(-RND, RND);
-
-	for(int idx = 0; idx < N; ++idx)
+	int* matrix = zero_matrix(N);
+	const size_t blockDim = N / gridDim;
+	int count = 0;
+	for(size_t gX = 0; gX < gridDim; ++gX)
 	{
-		for(int jdx = 0; jdx < N; ++jdx)
+		for(size_t idx = 0; idx < blockDim; ++idx)
 		{
-			matrix[idx][jdx] = distribution(generator); 
+			for(size_t gY = 0; gY < gridDim; ++gY)
+			{
+				for(size_t jdx = 0; jdx < blockDim; ++jdx)
+				{
+					matrix[OFFSET(IDX(gX, gY, gridDim), blockDim*blockDim) + IDX(idx, jdx, blockDim)] = 1;
+				}
+			}
 		}
 	}
 	return matrix;
 }
 
-bool check(int** A, int** B, int** result, size_t N) 
+int* random_matrix(size_t N)
 {
-	print_matrix(A, N);
-	print_matrix(B, N);
-	print_matrix(result, N);
+	const int RND = 100;
+	std::default_random_engine generator(time(NULL));
+	std::uniform_int_distribution<int> distribution(-RND, RND);
 
+	int* matrix = zero_matrix(N);
+	for(int idx = 0; idx < N*N; ++idx)
+	{
+		matrix[idx] = distribution(generator); 
+	}
+	return matrix;
+}
+
+bool check(int* A, int* B, int* result, size_t N, size_t gridDim) 
+{
+	print_matrix(A, N, gridDim);
+	print_matrix(B, N, gridDim);
+	print_matrix(result, N, gridDim);
+
+	const size_t blockDim = N / gridDim;
 	for(size_t i = 0; i < N; ++i)
 	{
+		int gI = i / blockDim;
+		int idx = i % blockDim;
+
 		for(size_t j = 0; j < N; ++j)
 		{
+			int gJ = j / blockDim;
+			int jdx = j % blockDim;
+
+			int index = OFFSET(IDX(gI, gJ, gridDim), blockDim*blockDim) + IDX(idx, jdx, blockDim);
 			int value = 0;
 			for(size_t k = 0; k < N; ++k)
 			{
-				result += A[i][k] * B[k][j];
+				int gK = k / blockDim;
+				int kdx = k % blockDim;
+
+				int A_index = OFFSET(IDX(gI, gK, gridDim), blockDim*blockDim) + IDX(idx, kdx, blockDim);
+				int B_index = OFFSET(IDX(gK, gJ, gridDim), blockDim*blockDim) + IDX(kdx, jdx, blockDim);
+				value += A[A_index] * B[B_index];
 			}
 
-			if(value != result[i][j])
+			if(value != result[index])
 			{
 				printf("\n Difference at position %lu, %lu\n",i,j);
-				printf("\n reference %d, test %d\n", value, result[i][j]);
+				printf("\n reference %d, test %d\n", value, result[index]);
 				return false;
 			}
 		}

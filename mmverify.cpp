@@ -6,11 +6,29 @@
 
 int main( int argc, char **argv )
 {
-	size_t MATRIX_SIZE = 8;
-	int** A = alloc_matrix(MATRIX_SIZE);
-	int** B = alloc_matrix(MATRIX_SIZE);
-	random_matrix(A, MATRIX_SIZE);
-	random_matrix(B, MATRIX_SIZE);
-	check(A, B, mpi_matrix_multiplication(A, B, MATRIX_SIZE), MATRIX_SIZE); 
-	return 1;
+	MPI_Init (&argc, &argv); 
+	const size_t MATRIX_SIZE = 10;
+	const size_t DEPTH = 2;
+	int num_procs, myrank;
+	MPI_Comm_size(MPI_COMM_WORLD, &num_procs); 
+	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+	const int gridDim = std::sqrt(num_procs / DEPTH);
+
+	int* A = NULL;
+	int* B = NULL;
+	if(!myrank)
+	{
+		//A = random_matrix(MATRIX_SIZE);
+		//B = random_matrix(MATRIX_SIZE);
+		A = count_matrix(MATRIX_SIZE, gridDim);
+		B = count_matrix(MATRIX_SIZE, gridDim);
+	}
+
+	print_matrix(A, MATRIX_SIZE, gridDim);
+	int* result = mpi_matrix_multiplication(A, B, MATRIX_SIZE, DEPTH);
+	print_matrix(result, MATRIX_SIZE, gridDim);
+
+	//check(A, B, result, MATRIX_SIZE); 
+	MPI_Finalize();
+	return 0;
 }
