@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include <math.h>
 #include <assert.h>
+
 #include "matrix.h"
 
 void matrix_multiply(int* A, int* B, int*C, const int N)
@@ -52,14 +53,15 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
 	const int ndims = 3;
-	const int gridDim = std::sqrt(num_procs / depth);
+	const int gridDim = std::floor(std::sqrt(num_procs / depth));
 	const int blockDim = MATRIX_SIZE / gridDim;
-	const int rounds = std::sqrt(num_procs / std::pow(depth, 3));
+	const int rounds = std::floor(std::sqrt(num_procs / std::pow(depth, 3)));
 
 	// 3D communication MPI
 	MPI_Comm comm_3d;
 	int dims[ndims], periods[ndims];
-	dims[0] = dims[1] = dims[2] = gridDim;
+	dims[0] = dims[1] = gridDim;
+	dims[2] = depth;
 	periods[0] = periods[1] = periods[2] = 1;
 	MPI_Cart_create(MPI_COMM_WORLD, ndims, dims, periods, 1, &comm_3d);
 
@@ -142,11 +144,11 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 	// Cannon's Algorithm
 	MPI_Request requests[4];
 	int uprank, downrank, leftrank, rightrank; 
-	MPI_Cart_shift(comm_3d, 0, 1, &uprank, &downrank); 
-	MPI_Cart_shift(comm_3d, 1, 1, &leftrank, &rightrank);
+        MPI_Cart_shift(comm_3d, 0, 1, &uprank, &downrank);
+        MPI_Cart_shift(comm_3d, 1, 1, &leftrank, &rightrank);
 	//printf("x:%d y:%d z:%d rank:%d Ashift:%d Bshift:%d\n", my_coords[0], my_coords[1], my_coords[2], my_3d_rank, leftrank, uprank);
 
-	for (int idx = 0; idx < rounds; ++idx)
+	for (int idx = 0; idx < rounds-1; ++idx)
 	{
 		//printf("Rank %d started iteration %lu\n", my_3d_rank, idx);
 		MPI_Sendrecv_replace(Asub, blockDim*blockDim, MPI_INT, rightrank, 1, leftrank, 1, comm_3d, &status[0]); 

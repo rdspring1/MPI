@@ -47,7 +47,7 @@ int* count_matrix(const size_t N, const size_t gridDim)
 			{
 				for(size_t jdx = 0; jdx < blockDim; ++jdx)
 				{
-					matrix[OFFSET(IDX(gX, gY, gridDim), blockDim*blockDim) + IDX(idx, jdx, blockDim)] = 1;
+					matrix[OFFSET(IDX(gX, gY, gridDim), blockDim*blockDim) + IDX(idx, jdx, blockDim)] = (++count);
 				}
 			}
 		}
