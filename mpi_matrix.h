@@ -70,9 +70,9 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 	MPI_Cart_coords(comm_3d, my_3d_rank, ndims, my_coords); 
 
 	// Allocate Sub-Matrices
-	int* Asub = zero_matrix(blockDim*blockDim);
-	int* Bsub = zero_matrix(blockDim*blockDim);
-	int* Csub = zero_matrix(blockDim*blockDim);
+	int* Asub = zero_matrix(blockDim);
+	int* Bsub = zero_matrix(blockDim);
+	int* Csub = zero_matrix(blockDim);
 
 	// Initialize front face communication topology 
 	int* front_face = new int[gridDim*gridDim];
@@ -162,7 +162,7 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 	//printf("Rank %d at point 2\n", my_3d_rank);
 
 	// Sum-Reduction along depth
-	int* result_sub = zero_matrix(blockDim*blockDim);
+	int* result_sub = zero_matrix(blockDim);
 	for(int idx = 0; idx < gridDim; ++idx)
 	{
 		for(int jdx = 0; jdx < gridDim; ++jdx)
@@ -174,6 +174,9 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 			}
 		}
 	}
+	delete[] Asub;
+	delete[] Bsub;
+	delete[] Csub;
 
 	// Delete MPI Depth
 	for(size_t idx = 0; idx < comm_depth.size(); ++idx)
@@ -196,6 +199,7 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 	{
 		MPI_Gather(result_sub, blockDim*blockDim, MPI_INT, result, blockDim*blockDim, MPI_INT, 0, comm_front_face);
 	}
+	delete[] result_sub;
 
 	// Delete MPI Front Face 
 	MPI_Comm_delete(&comm_front_face);

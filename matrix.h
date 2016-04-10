@@ -71,9 +71,9 @@ int* random_matrix(size_t N)
 
 bool check(int* A, int* B, int* result, size_t N, size_t gridDim) 
 {
-	print_matrix(A, N, gridDim);
-	print_matrix(B, N, gridDim);
-	print_matrix(result, N, gridDim);
+	//print_matrix(A, N, gridDim);
+	//print_matrix(B, N, gridDim);
+	//print_matrix(result, N, gridDim);
 
 	const size_t blockDim = N / gridDim;
 	for(size_t i = 0; i < N; ++i)
