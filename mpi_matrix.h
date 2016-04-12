@@ -53,9 +53,9 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
 	const int ndims = 3;
-	const int gridDim = std::floor(std::sqrt(num_procs / depth));
+	const int gridDim = std::sqrt(num_procs / depth);
 	const int blockDim = MATRIX_SIZE / gridDim;
-	const int rounds = std::floor(std::sqrt(num_procs / std::pow(depth, 3)));
+	const int rounds = std::sqrt(num_procs / std::pow(depth, 3));
 
 	// 3D communication MPI
 	MPI_Comm comm_3d;

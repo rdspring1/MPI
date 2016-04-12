@@ -8,8 +8,8 @@ int main( int argc, char **argv )
 {
 	MPI_Init (&argc, &argv); 
 
-	const size_t MATRIX_SIZE = 1000;
-	const size_t DEPTH = 2;
+	const size_t MATRIX_SIZE = atoi(argv[1]);
+	const size_t DEPTH = atoi(argv[2]);
 
 	int num_procs, myrank;
 	MPI_Comm_size(MPI_COMM_WORLD, &num_procs); 
@@ -22,6 +22,7 @@ int main( int argc, char **argv )
 	double t1, t2;
 	if(!myrank)
 	{
+		printf("N=%lu P=%d C=%lu\n", MATRIX_SIZE, num_procs, DEPTH);
 		t1 = MPI_Wtime();
 		A = random_matrix(MATRIX_SIZE);
 		B = random_matrix(MATRIX_SIZE);
