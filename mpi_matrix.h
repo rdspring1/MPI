@@ -148,11 +148,24 @@ int* mpi_matrix_multiplication(int* A, int* B, const int MATRIX_SIZE, const int 
         MPI_Cart_shift(comm_3d, 1, 1, &leftrank, &rightrank);
 	//printf("x:%d y:%d z:%d rank:%d Ashift:%d Bshift:%d\n", my_coords[0], my_coords[1], my_coords[2], my_3d_rank, leftrank, uprank);
 
+	int *buffersA[2]; 
+	int *buffersB[2];
+	buffersA[0] = Asub; 
+	buffersA[1] = zero_matrix(blockDim); 
+	buffersB[0] = Bsub; 
+	buffersB[1] = zero_matrix(blockDim);
+
 	for (int idx = 0; idx < rounds-1; ++idx)
 	{
 		//printf("Rank %d started iteration %lu\n", my_3d_rank, idx);
-		MPI_Sendrecv_replace(Asub, blockDim*blockDim, MPI_INT, rightrank, 1, leftrank, 1, comm_3d, &status[0]); 
-		MPI_Sendrecv_replace(Bsub, blockDim*blockDim, MPI_INT, downrank, 1, uprank, 1, comm_3d, &status[1]);
+		//MPI_Sendrecv_replace(Asub, blockDim*blockDim, MPI_INT, rightrank, 1, leftrank, 1, comm_3d, &status[0]); 
+		//MPI_Sendrecv_replace(Bsub, blockDim*blockDim, MPI_INT, downrank, 1, uprank, 1, comm_3d, &status[1]);
+
+		MPI_Isend(buffersA[idx % 2],     blockDim*blockDim, MPI_INT, rightrank, 1, comm_3d, &requests[0]); 
+		MPI_Isend(buffersB[idx % 2],     blockDim*blockDim, MPI_INT, downrank,  1, comm_3d, &requests[1]); 
+		MPI_Irecv(buffersA[(idx+1) % 2], blockDim*blockDim, MPI_INT, leftrank,  1, comm_3d, &requests[2]); 
+		MPI_Irecv(buffersB[(idx+1) % 2], blockDim*blockDim, MPI_INT, uprank,    1, comm_3d, &requests[3]);
+		MPI_Waitall(4, requests, status);
 		//printf("Rank %d stopped waiting in iteration %lu\n", my_3d_rank, idx);
 
 		matrix_multiply(Asub, Bsub, Csub, blockDim);

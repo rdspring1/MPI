@@ -69,7 +69,6 @@ int main( int argc, char **argv )
 		MPI_Isend(buffersB[i%2], sizelocal*sizelocal, MPI_INT,uprank, 1, comm_2d, &requests[1]); 
 		MPI_Irecv(buffersA[(i+1)%2], sizelocal*sizelocal, MPI_INT,rightrank, 1, comm_2d, &requests[2]); 
 		MPI_Irecv(buffersB[(i+1)%2], sizelocal*sizelocal, MPI_INT,downrank, 1, comm_2d, &requests[3]);
-
 		MPI_Waitall(4, requests, status);
 		printf("Rank %d stopped waiting in iteration %d\n", my2drank, i);
 		MPI_Barrier(comm_2d);
